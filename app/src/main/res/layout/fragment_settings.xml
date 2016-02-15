@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="io.github.droidkaigi.confsched.activity.MainActivity">
 
@@ -65,20 +66,46 @@
 
         <View style="@style/Border" />
 
-        <TextView
-            android:id="@+id/txt_bugreport"
+        <io.github.droidkaigi.confsched.widget.SettingSwitchRowView
+            android:id="@+id/local_time_switch_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/clickable"
-            android:padding="@dimen/spacing"
-            android:clickable="true"
-            android:ellipsize="end"
-            android:lines="1"
-            android:text="@string/settings_bugreport"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text" />
+            app:settingDescription="@string/settings_local_time_description"
+            app:settingTitle="@string/settings_local_time" />
 
         <View style="@style/Border" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_notification_group"
+                android:textColor="?attr/colorPrimary"/>
+
+        </RelativeLayout>
+
+        <io.github.droidkaigi.confsched.widget.SettingSwitchRowView
+            android:id="@+id/notification_switch_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:settingDescription="@string/settings_notification_description"
+            app:settingTitle="@string/settings_notification" />
+
+        <View style="@style/Border" />
+
+        <io.github.droidkaigi.confsched.widget.SettingSwitchRowView
+            android:id="@+id/heads_up_switch_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:settingDescription="@string/settings_heads_up_notification_description"
+            app:settingTitle="@string/settings_heads_up_notification" />
+
+        <View android:id="@+id/heads_up_border" style="@style/Border" android:visibility="gone" />
 
     </LinearLayout>
 
