@@ -68,6 +68,7 @@ public class MapFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentMapBinding.inflate(inflater, container, false);
+        binding.mapSearchView.setOnVisibilityChangeListener(() -> getActivity().invalidateOptionsMenu());
         initGoogleMapWithCheck(this);
         setHasOptionsMenu(true);
         initBackPressed();
@@ -78,15 +79,21 @@ public class MapFragment extends Fragment {
     public void onDestroyView() {
         FragmentManager fm = getChildFragmentManager();
         SupportMapFragment map = (SupportMapFragment) fm.findFragmentById(R.id.map);
-        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        FragmentTransaction ft = fm.beginTransaction();
         ft.remove(map);
-        ft.commit();
+        ft.commitAllowingStateLoss();
         super.onDestroyView();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.menu_map, menu);
+
+        if (binding.mapSearchView.isVisible()) {
+            menu.findItem(R.id.item_search).setIcon(R.drawable.ic_place_white_24dp);
+        } else {
+            menu.findItem(R.id.item_search).setIcon(R.drawable.ic_view_list_white_24dp);
+        }
     }
 
     @Override
