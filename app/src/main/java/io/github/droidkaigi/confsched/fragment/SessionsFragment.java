@@ -10,7 +10,6 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,7 +28,6 @@ import java.util.TreeMap;
 
 import javax.inject.Inject;
 
-import io.github.droidkaigi.confsched.MainApplication;
 import io.github.droidkaigi.confsched.R;
 import io.github.droidkaigi.confsched.activity.ActivityNavigator;
 import io.github.droidkaigi.confsched.activity.SearchActivity;
@@ -47,7 +45,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
-public class SessionsFragment extends Fragment implements StackedPageListener {
+public class SessionsFragment extends BaseFragment implements StackedPageListener {
 
     public static final String TAG = SessionsFragment.class.getSimpleName();
     private static final String ARG_SHOULD_REFRESH = "should_refresh";
@@ -83,7 +81,6 @@ public class SessionsFragment extends Fragment implements StackedPageListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentSessionsBinding.inflate(inflater, container, false);
-        initTabLayout(binding.tabLayout);
         setHasOptionsMenu(true);
         initEmptyView();
         compositeSubscription.add(loadData());
@@ -102,14 +99,10 @@ public class SessionsFragment extends Fragment implements StackedPageListener {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        MainApplication.getComponent(this).inject(this);
+        getComponent().inject(this);
         if (context instanceof OnChangeSessionListener) {
             onChangeSessionListener = (OnChangeSessionListener) context;
         }
-    }
-
-    protected void initTabLayout(TabLayout tabLayout) {
-        tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(), Page.ALL_SESSIONS.getToolbarColor()));
     }
 
     private void initEmptyView() {

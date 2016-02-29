@@ -1,7 +1,9 @@
 package io.github.droidkaigi.confsched.activity;
 
 import android.app.Activity;
+import android.app.Notification;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,18 +14,16 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
 import javax.inject.Inject;
 
-import io.github.droidkaigi.confsched.MainApplication;
 import io.github.droidkaigi.confsched.R;
 import io.github.droidkaigi.confsched.databinding.ActivityMainBinding;
 import io.github.droidkaigi.confsched.fragment.SessionsFragment;
+import io.github.droidkaigi.confsched.fragment.SettingsFragment;
 import io.github.droidkaigi.confsched.fragment.StackedPageListener;
 import io.github.droidkaigi.confsched.model.MainContentStateBrokerProvider;
 import io.github.droidkaigi.confsched.model.Page;
@@ -32,11 +32,13 @@ import io.github.droidkaigi.confsched.util.AppUtil;
 import io.github.droidkaigi.confsched.util.LocaleUtil;
 import rx.subscriptions.CompositeSubscription;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener, FragmentManager.OnBackStackChangedListener {
 
     private static final String EXTRA_SHOULD_REFRESH = "should_refresh";
-    private static final String EXTRA_TITLE = "title";
+    private static final String EXTRA_MENU = "menu";
+
+    private static final long DRAWER_CLOSE_DELAY_MILLS = 300L;
 
     @Inject
     AnalyticsTracker analyticsTracker;
@@ -57,6 +59,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        LocaleUtil.initLocale(this);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         LocaleUtil.initLocale(this);
@@ -66,7 +74,7 @@ public class MainActivity extends AppCompatActivity
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         DataBindingUtil.bind(binding.navView.getHeaderView(0));
 
-        MainApplication.getComponent(this).inject(this);
+        getComponent().inject(this);
 
         subscription.add(brokerProvider.get().observe().subscribe(page -> {
             toggleToolbarElevation(page.shouldToggleToolbar());
@@ -75,12 +83,19 @@ public class MainActivity extends AppCompatActivity
         }));
 
         initView();
-        AppUtil.setTaskDescription(this, getString(R.string.all_sessions), AppUtil.getThemeColorPrimary(this));
 
         if (savedInstanceState == null) {
-            replaceFragment(SessionsFragment.newInstance(shouldRefresh));
-        } else {
-            binding.toolbar.setTitle(savedInstanceState.getString(EXTRA_TITLE));
+            if (getIntent().hasCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES)) {
+                AppUtil.setTaskDescription(this, getString(R.string.settings), AppUtil.getThemeColorPrimary(this));
+                replaceFragment(SettingsFragment.newInstance());
+            } else {
+                AppUtil.setTaskDescription(this, getString(R.string.all_sessions), AppUtil.getThemeColorPrimary(this));
+                replaceFragment(SessionsFragment.newInstance(shouldRefresh));
+            }
+        } else if (savedInstanceState.getInt(EXTRA_MENU) != 0) {
+            Page page = Page.forMenuId(savedInstanceState.getInt(EXTRA_MENU));
+            binding.toolbar.setTitle(page.getTitleResId());
+            toggleToolbarElevation(page.shouldToggleToolbar());
         }
         getSupportFragmentManager().addOnBackStackChangedListener(this);
     }
@@ -88,7 +103,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(EXTRA_TITLE, binding.toolbar.getTitle().toString());
+        Fragment current = getSupportFragmentManager().findFragmentById(R.id.content_view);
+        if (current != null) {
+            outState.putInt(EXTRA_MENU, Page.forName(current).getMenuId());
+        }
     }
 
     @Override
@@ -140,23 +158,17 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         binding.drawer.closeDrawer(GravityCompat.START);
 
-        Page page = Page.forMenuId(item);
-        toggleToolbarElevation(page.shouldToggleToolbar());
-        changeToolbarColor(page.getToolbarColor());
-        changeStatusBarColor(page.getStatusBarColor());
-        changePage(page.getTitleResId(), page.createFragment());
+        if (item.getItemId() == R.id.nav_questionnaire) {
+            new Handler().postDelayed(() -> {
+                AppUtil.showWebPage(this, getString(R.string.about_inquiry_url));
+            }, DRAWER_CLOSE_DELAY_MILLS);
+        } else {
+            Page page = Page.forMenuId(item);
+            toggleToolbarElevation(page.shouldToggleToolbar());
+            changePage(page.getTitleResId(), page.createFragment());
+        }
 
         return true;
-    }
-
-    private void changeToolbarColor(int color) {
-        binding.toolbar.setBackground(ContextCompat.getDrawable(this, color));
-    }
-
-    private void changeStatusBarColor(int color) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            binding.drawer.setStatusBarBackground(color);
-        }
     }
 
     private void toggleToolbarElevation(boolean enable) {
@@ -171,7 +183,7 @@ public class MainActivity extends AppCompatActivity
             binding.toolbar.setTitle(titleRes);
             AppUtil.setTaskDescription(this, getString(titleRes), AppUtil.getThemeColorPrimary(this));
             replaceFragment(fragment);
-        }, 300);
+        }, DRAWER_CLOSE_DELAY_MILLS);
     }
 
     @Override
@@ -192,8 +204,6 @@ public class MainActivity extends AppCompatActivity
         Page page = Page.forName(current);
         binding.navView.setCheckedItem(page.getMenuId());
         binding.toolbar.setTitle(page.getTitleResId());
-        changeToolbarColor(page.getToolbarColor());
-        changeStatusBarColor(page.getStatusBarColor());
         toggleToolbarElevation(page.shouldToggleToolbar());
         if (current instanceof StackedPageListener) {
             StackedPageListener l = (StackedPageListener) current;

@@ -6,24 +6,25 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import io.github.droidkaigi.confsched.MainApplication;
+
+import java.util.Arrays;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import io.github.droidkaigi.confsched.R;
 import io.github.droidkaigi.confsched.activity.ActivityNavigator;
 import io.github.droidkaigi.confsched.dao.SessionDao;
 import io.github.droidkaigi.confsched.databinding.FragmentSettingsBinding;
+import io.github.droidkaigi.confsched.prefs.DefaultPrefsSchema;
 import io.github.droidkaigi.confsched.util.LocaleUtil;
-import io.github.droidkaigi.confsched.util.PrefUtil;
-import java.util.Arrays;
-import java.util.List;
-import javax.inject.Inject;
 import rx.Observable;
 
-public class SettingsFragment extends Fragment {
+public class SettingsFragment extends BaseFragment {
 
     public static final String TAG = SettingsFragment.class.getSimpleName();
 
@@ -49,22 +50,32 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        MainApplication.getComponent(this).inject(this);
+        getComponent().inject(this);
     }
 
     private void initView() {
         binding.txtLanguage.setText(LocaleUtil.getCurrentLanguage(getActivity()));
         binding.languageSettingsContainer.setOnClickListener(v -> showLanguagesDialog());
-        binding.notificationSwitchRow.init(PrefUtil.KEY_NOTIFICATION_SETTING, true);
-        binding.localTimeSwitchRow.init(PrefUtil.KEY_SHOW_LOCAL_TIME, false);
+
+        boolean shouldNotify = DefaultPrefsSchema.get(getContext()).getNotificationFlag(true);
+        binding.notificationSwitchRow.init(shouldNotify, ((v, isChecked) -> {
+            DefaultPrefsSchema.get(getContext()).putNotificationFlag(isChecked);
+            binding.headsUpSwitchRow.setEnabled(isChecked);
+        }));
+        binding.headsUpSwitchRow.setEnabled(shouldNotify);
+
+        boolean shouldShowLocalTime = DefaultPrefsSchema.get(getContext()).getShowLocalTimeFlag(false);
+        binding.localTimeSwitchRow.init(shouldShowLocalTime, ((buttonView, isChecked) -> {
+            DefaultPrefsSchema.get(getContext()).putShowLocalTimeFlag(isChecked);
+        }));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            binding.headsUpSwitchRow.init(PrefUtil.KEY_HEADS_UP_SETTING, true);
+            boolean headsUp = DefaultPrefsSchema.get(getContext()).getHeadsUpFlag(true);
+            binding.headsUpSwitchRow.init(headsUp, (v, isChecked) -> {
+                DefaultPrefsSchema.get(getContext()).putHeadsUpFlag(isChecked);
+            });
             binding.headsUpSwitchRow.setVisibility(View.VISIBLE);
             binding.headsUpBorder.setVisibility(View.VISIBLE);
-            binding.notificationSwitchRow.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                binding.headsUpSwitchRow.setEnabled(isChecked);
-            });
         }
     }
 

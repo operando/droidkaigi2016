@@ -14,6 +14,7 @@
 
     <string name="title">タイトル</string>
     <string name="description">詳細</string>
+    <string name="slide">スライド</string>
 
     <string name="search_by_category">カテゴリから探す</string>
     <string name="search_by_place">場所から探す</string>
@@ -50,6 +51,7 @@
     <string name="lang_ar">@string/lang_ar_in_ja</string>
     <string name="lang_en">@string/lang_en_in_ja</string>
     <string name="lang_ja">@string/lang_ja_in_ja</string>
+    <string name="lang_ko">@string/lang_ko_in_ja</string>
 
     <string name="settings_language">言語を設定</string>
     <string name="settings_language_description">表示言語を変更できます。変更後はアプリが再起動されます。</string>
