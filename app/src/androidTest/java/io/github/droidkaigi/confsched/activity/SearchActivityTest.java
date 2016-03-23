@@ -9,6 +9,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.github.droidkaigi.confsched.R;
+
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+
 @RunWith(AndroidJUnit4.class)
 public class SearchActivityTest {
 
@@ -16,7 +23,10 @@ public class SearchActivityTest {
     public IntentsTestRule<SearchActivity> activityRule = new IntentsTestRule<>(SearchActivity.class);
 
     @Test
-    public void search() {
-        Spoon.screenshot(activityRule.getActivity(), "search_page1");
+    public void search() throws InterruptedException {
+        Spoon.screenshot(activityRule.getActivity(), "search_page");
+        onView(withId(R.id.edit_search)).perform(typeText("test"), closeSoftKeyboard());
+        Thread.sleep(500);
+        Spoon.screenshot(activityRule.getActivity(), "search_test");
     }
 }
