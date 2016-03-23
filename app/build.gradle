@@ -131,8 +131,8 @@ android {
 spoon {
     debug true
     noAnimations true
+    failIfNoDeviceConnected true
     adbTimeout 60
-    className 'io.github.droidkaigi.confsched.activity.MainActivityTest'
 }
 
 dependencies {
