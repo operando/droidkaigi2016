@@ -30,7 +30,7 @@ public class ContributorsActivityTest {
 
     @Rule
     public IntentsTestRule<ContributorsActivity> activityRule = new IntentsTestRule<>(
-            ContributorsActivity.class, true, true);
+            ContributorsActivity.class, true, false);
 
     @Before
     public void setUp() {
@@ -43,7 +43,7 @@ public class ContributorsActivityTest {
 
     @Test
     public void contributors() throws InterruptedException {
-        Thread.sleep(6000);
+        Thread.sleep(3000);
         Spoon.screenshot(activityRule.getActivity(), "contributors_page1");
         onView(withId(R.id.recycler_view)).perform(RecyclerViewActions.scrollToPosition(10));
         Thread.sleep(2000);
